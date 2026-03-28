@@ -3,9 +3,10 @@ package com.pierani.ByteBank;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @Entity
-@Table
+@Table(name = "pagamento")
 public class Pagamento {
 
     @Id
@@ -14,9 +15,11 @@ public class Pagamento {
     private String nome;
     private String cpf;
     private int agencia;
-    private int conta;
-    private int valor;
-    private LocalDate mesReferencia;
+    private String conta;
+    private Double valor;
+
+    @Convert(converter = YearMonthConverter.class)
+    private YearMonth mesReferencia;
 
     public Long getId() {
         return id;
@@ -50,27 +53,27 @@ public class Pagamento {
         this.agencia = agencia;
     }
 
-    public int getConta() {
+    public String getConta() {
         return conta;
     }
 
-    public void setConta(int conta) {
+    public void setConta(String conta) {
         this.conta = conta;
     }
 
-    public int getValor() {
+    public Double getValor() {
         return valor;
     }
 
-    public void setValor(int valor) {
+    public void setValor(Double valor) {
         this.valor = valor;
     }
 
-    public LocalDate getMesReferencia() {
+    public YearMonth getMesReferencia() {
         return mesReferencia;
     }
 
-    public void setMesReferencia(LocalDate mesReferencia) {
+    public void setMesReferencia(YearMonth mesReferencia) {
         this.mesReferencia = mesReferencia;
     }
 }

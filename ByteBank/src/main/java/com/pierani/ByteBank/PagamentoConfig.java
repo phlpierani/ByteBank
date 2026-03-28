@@ -16,6 +16,7 @@ import org.springframework.batch.infrastructure.item.file.builder.FlatFileItemRe
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -58,9 +59,11 @@ public class PagamentoConfig {
         return new FlatFileItemReaderBuilder<Pagamento>()
                 .name("pagamento-csv")
                 .resource(new FileSystemResource("file/dados_ficticios.csv"))
+                .linesToSkip(1) // <-- pula o cabeçalho
                 .delimited()
+                .delimiter("|")
                 .names("nome", "cpf", "agencia", "conta", "valor", "mesReferencia")
-                .targetType(Pagamento.class)
+                .fieldSetMapper(new PagamentoMapper())
                 .build();
     }
 
@@ -69,11 +72,19 @@ public class PagamentoConfig {
         return new JdbcBatchItemWriterBuilder<Pagamento>()
                 .dataSource(dataSource)
                 .sql(
-                        "INSERT INTO pagamento (id, nome, cpf, agencia, conta, valor, mes_referencia) VALUES" +
-                                "(:id, :nome, :cpf, :agencia, :conta, :valor, :mes_referencia, " + LocalDateTime.now() + ")"
+                        "INSERT INTO pagamento (nome, cpf, agencia, conta, valor, mes_referencia) VALUES " +
+                                "(:nome, :cpf, :agencia, :conta, :valor, :mesReferencia)"
                 )
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
+                .itemSqlParameterSourceProvider(pagamento -> {
+                    MapSqlParameterSource params = new MapSqlParameterSource();
+                    params.addValue("nome", pagamento.getNome());
+                    params.addValue("cpf", pagamento.getCpf());
+                    params.addValue("agencia", pagamento.getAgencia());
+                    params.addValue("conta", pagamento.getConta());
+                    params.addValue("valor", pagamento.getValor());
+                    params.addValue("mesReferencia", pagamento.getMesReferencia().toString()); // <-- converte para "2024-08"
+                    return params;
+                })
                 .build();
     }
-
 }
